@@ -31,7 +31,7 @@ heatmap_brewer <- function(pvals, plot.title, n.cores = 2, sig.only = FALSE, fil
     snp.idx <- 1:n.genotypes
     probe.idx <- 1:n.probes
   } else {
-    derez.list <- zoom.plot::derez(pvals, heatmap.snps, heatmap.probes, 1:n.genotypes, 1:n.probes, mc.cores = n.cores)
+    derez.list <- derez(pvals, heatmap.snps, heatmap.probes, 1:n.genotypes, 1:n.probes, mc.cores = n.cores)
     heatmap <- derez.list$x
     snp.idx <- derez.list$row.pos
     probe.idx <- derez.list$col.pos

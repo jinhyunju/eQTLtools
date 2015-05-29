@@ -1,8 +1,6 @@
 #' @import fields
 #' @import parallel
 #' @import RColorBrewer
-#' @import parallel
-#' @import zoom.plot
 #'
 #' @export
 heatmap_brewer <- function(pvals, plot.title, n.cores = 2, sig.only = FALSE, file = TRUE){
@@ -58,7 +56,7 @@ heatmap_brewer <- function(pvals, plot.title, n.cores = 2, sig.only = FALSE, fil
           zlim = 0:1,
           xlab='SNPs', ylab='Genes',
           col = brewer.pal(9,"Greens"), xpd = NA, mgp = c(4,0.5,0) )
-    with(pval.hits, points(row, col, cex = 3)) # have to fix this part so that it aligns with 
+    with(pval.hits, points(row, col, cex = 3)) # have to fix this part so that it aligns with
 
   } else{
     image(snp.idx, probe.idx, heatmap,
@@ -72,7 +70,7 @@ heatmap_brewer <- function(pvals, plot.title, n.cores = 2, sig.only = FALSE, fil
   mtext(plot.title, side = 3, line = 0.5, outer = TRUE, cex = 2)
   plot(phenotype.pval.means, 1:ncol(pvals), type='l', yaxt='n',  yaxs='i')
   plot(0, ann=FALSE, bty='n', type='n', xaxt='n', yaxt='n')
-  
+
   if(file){
     draw.scale(brewer.pal(10, "RdYlBu"), c(0,1), size = 3, cex = 1.5, width.to.height =10)
     dev.off()
@@ -80,5 +78,47 @@ heatmap_brewer <- function(pvals, plot.title, n.cores = 2, sig.only = FALSE, fil
     draw.scale(brewer.pal(10, "RdYlBu"), c(0,1), size = 1, cex = 1)
     par(default.par)
   }
+
+}
+
+#' @import parallel
+#' @export
+derez <- function(x, new.nrow, new.ncol, row.pos, col.pos, mc.cores=1) {
+
+  # This function only decreases resolution, doesn't increase
+  new.nrow <- min(new.nrow, nrow(x))
+  new.ncol <- min(new.ncol, ncol(x))
+
+  # Divide rows and cols into approximately equal bins
+  row.end <- round(seq(0, nrow(x), length.out=new.nrow+1))[-1]
+  row.beg <- c(1, row.end[-new.nrow]+1)
+  col.end <- round(seq(0, ncol(x), length.out=new.ncol+1))[-1]
+  col.beg <- c(1, col.end[-new.ncol]+1)
+
+  # Vectorized function to calculate mean for each bin
+  avg.block <- function(i, j) {
+    simplify2array(parallel::mclapply(1:length(i), function(k) {
+      mean(x[row.beg[i[k]]:row.end[i[k]], col.beg[j[k]]:col.end[j[k]]])
+    }, mc.cores=mc.cores))
+  }
+
+  # Outer calls the vectorized function to generate new matrix
+  new.x <- outer(1:new.nrow, 1:new.ncol, avg.block)
+
+  if ( missing(row.pos) && missing(col.pos) ) {
+    return ( new.x )
+  }
+
+  new.row.pos <- NULL
+  new.col.pos <- NULL
+
+  if ( !missing(row.pos) ) {
+    new.row.pos <- sapply(1:new.nrow, function (i) mean(row.pos[row.beg[i]:row.end[i]]))
+  }
+  if ( !missing(col.pos) ) {
+    new.col.pos <- sapply(1:new.ncol, function (i) mean(col.pos[col.beg[i]:col.end[i]]))
+  }
+
+  return ( list(x=new.x, row.pos=new.row.pos, col.pos=new.col.pos) )
 
 }

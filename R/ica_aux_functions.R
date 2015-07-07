@@ -1,9 +1,10 @@
 #' @import lrgpr
+#' @import formula.tools
 #' @export
 ica_genotype_test <- function(ica.result, genotype.mx, n.cores = 1){
   ica.loadings <- t(ica.result$A)
 
-  ic.vs.geno <- lrgpr::glmApply(ica.loadings ~ SNP,
+  ic.vs.geno <- glmApply(ica.loadings ~ SNP,
                          features = genotype.mx,
                          nthreads = n.cores)$pValues
 

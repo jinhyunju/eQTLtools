@@ -11,7 +11,8 @@ multi_eqtl_simulator <- function(input.geno = NULL,
                                  trans.nerf = 0.6,
                                  hidden.factor = TRUE,
                                  factors = rep("sparse",20),
-                                 factor.coeff = rep(c("uniform","binom","normal","uniform"),5)){
+                                 factor.coeff = rep(c("uniform","binom","normal","uniform"),5),
+                                 hf.frac = 0.2){
 
   n.sample <- nrow(input.geno)
   coeff.dist <- rexp(100000,coeff.ratio) * sample(c(-1,1), 100000, replace = TRUE)
@@ -89,7 +90,8 @@ multi_eqtl_simulator <- function(input.geno = NULL,
       hf_list <- apply(factor.details, 1, function(x) hf_sim(n.genes = n.pheno,
                                                              n.samples = n.sample,
                                                              hf.type = x[1],
-                                                             coeff.dist = x[2]))
+                                                             coeff.dist = x[2],
+                                                             fraction.affected = hf.frac))
 
       # add all hidden factor effects
       hf.effect <- Reduce(`+`, lapply(hf_list, function(x) x$effect))

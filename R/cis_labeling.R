@@ -19,3 +19,4 @@ cis_labeling <- function(hit.info, cis_distance){
   return(label)
 
 }
+

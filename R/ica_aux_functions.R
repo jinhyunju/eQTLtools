@@ -28,7 +28,7 @@ pca_genotype_test <- function(pca.result, genotype.mx, n.cores = 1){
                          features = genotype.mx,
                          nthreads = n.cores)$pValues
 
-  colnames(pc.vs.geno) <- rownames(pca.result$x)
+  colnames(pc.vs.geno) <- colnames(pca.result$x)
   sig <- which(pc.vs.geno < (0.05/length(pc.vs.geno) ), arr.ind = TRUE)
 
   genetic.factors <- colnames(pc.vs.geno)[unique(sig[,"col"])]

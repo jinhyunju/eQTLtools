@@ -19,6 +19,28 @@ ica_genotype_test <- function(ica.result, genotype.mx, n.cores = 1){
 }
 
 #' @import lrgpr
+#' @import formula.tools
+#' @export
+pca_genotype_test <- function(pca.result, genotype.mx, n.cores = 1){
+  pca.loadings <- pca.result$x
+
+  pc.vs.geno <- glmApply(pca.loadings ~ SNP,
+                         features = genotype.mx,
+                         nthreads = n.cores)$pValues
+
+  colnames(pc.vs.geno) <- rownames(pca.result$x)
+  sig <- which(pc.vs.geno < (0.05/length(pc.vs.geno) ), arr.ind = TRUE)
+
+  genetic.factors <- colnames(pc.vs.geno)[unique(sig[,"col"])]
+  non.genetic <- colnames(pc.vs.geno)[which(!(colnames(pc.vs.geno) %in% genetic.factors))]
+
+
+  return(list("genetic" = genetic.factors, "hf" = non.genetic))
+}
+
+
+
+#' @import lrgpr
 #' @export
 get_similarity_mx <- function(ica.result, hidden.factors){
   lmm.mx <- ica.result$A[hidden.factors,]

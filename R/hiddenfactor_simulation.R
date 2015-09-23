@@ -12,24 +12,25 @@
 #'
 #' @export
 hf_sim <- function(n.genes, n.samples,
-                      hf.type = c("sparse", "normal", "uniform"),
-                      coeff.dist = c("normal","uniform","binom"),
-                      fraction.affected = 0.2,
-                      binom.prob = 0.4){
+                   hf.type = c("sparse", "normal", "uniform"),
+                   coeff.dist = c("normal","uniform","binom"),
+                   fraction.affected = 0.2,
+                   binom.prob = 0.4,
+                   factor.effect.size = 2){
 
   if( hf.type == "sparse"){
     hiddenfactors <- matrix(sparse_factor(n.genes,
                                           fraction.affected = fraction.affected,
-                                          effect.mean = 1,
+                                          effect.mean = factor.effect.size,
                                           effect.sd = 0.5),
                             nrow = n.genes,
                             ncol = 1)
   } else if (hf.type == "normal"){
-    hiddenfactors <- matrix(rnorm(n.genes, 0, 1),
+    hiddenfactors <- matrix(rnorm(n.genes, 0, factor.effect.size),
                             nrow = n.genes,
                             ncol = 1)
   } else if (hf.type == "uniform"){
-    hiddenfactors <- matrix(runif(n.genes, -1, 1),
+    hiddenfactors <- matrix(runif(n.genes, -factor.effect.size, factor.effect.size),
                             nrow = n.genes,
                             ncol = 1)
   }

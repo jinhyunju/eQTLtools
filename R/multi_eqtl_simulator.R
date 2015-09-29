@@ -4,7 +4,7 @@ multi_eqtl_simulator <- function(input.geno = NULL,
                                  n.eqtl,
                                  simulation.id,
                                  working.directory,
-                                 coeff.ratio = 2.5,
+                                 coeff.ratio = 2.5, # now it is mean of normal distribution
                                  n.sim = 5,
                                  ct.ratio = 0.7,
                                  trans.impact = 80,
@@ -16,8 +16,8 @@ multi_eqtl_simulator <- function(input.geno = NULL,
                                  effect.size = 2){
 
   n.sample <- nrow(input.geno)
-  coeff.dist <- rexp(100000,coeff.ratio) * sample(c(-1,1), 100000, replace = TRUE)
-  coeff.sample <- coeff.dist[which(abs(coeff.dist) > 1)]
+#  coeff.dist <- rexp(100000,coeff.ratio) * sample(c(-1,1), 100000, replace = TRUE)
+#  coeff.sample <- coeff.dist[which(abs(coeff.dist) > 1)]
   sim.geneinfo <- pheno_position_simulator(n.pheno, 15)
 
   # Genotype LD estimation (using simple correlation)
@@ -39,7 +39,7 @@ multi_eqtl_simulator <- function(input.geno = NULL,
                                cis.trans.ratio = ct.ratio,
                                trans.impact = trans.impact,
                                trans.nerf = trans.nerf,
-                               coeff.sample = coeff.sample,
+                               coeff.sample = coeff.ratio,
                                cis.sd = 0.5)
 
 

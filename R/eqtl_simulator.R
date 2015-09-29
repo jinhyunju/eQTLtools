@@ -24,12 +24,11 @@ eqtl_simulator <- function(genotypes,
                            cis.trans.ratio = 0.8,
                            trans.impact = 50,
                            trans.nerf = 0.6,
-                           coeff.sample = NULL,
+                           coeff.sample = 2.5,
                            cis.sd = 0.5){
 
-  if(is.null(coeff.sample)){
-    coeff.sample <- sample(c(-1,1),1) * rnorm(n.cis, mean = 3, sd = 1)
-  }
+#  if(is.null(coeff.sample)){
+#  }
   # number of phenotypes
 
   # number of genotypes
@@ -46,6 +45,9 @@ eqtl_simulator <- function(genotypes,
   # number of cis relationships determined by the cis.trans.ratio
   n.cis <- round(n.eqtl * cis.trans.ratio)
 
+  # sample effect of cis eQTL
+  cis.coeff <- sample(c(-1,1),1) * rnorm(n.cis, mean = coeff.sample, sd = 1)
+
   # The rest of the genotypes will be trans-eqtls
   n.trans <- n.eqtl - n.cis
 
@@ -59,7 +61,7 @@ eqtl_simulator <- function(genotypes,
   # relationships and effectsize saved
   eqtl.indexes <- data.frame("geno" = sort(cis.geno),
                              "pheno" = sort(sample(1:n.pheno, n.cis, replace = FALSE)),
-                             "effect" = sample(coeff.sample, n.cis, replace = FALSE),
+                             "effect" = cis.coeff,
                              "label" = "cis")
 
   # create a matrix that will decide how many genes a single trans genotype
@@ -78,7 +80,7 @@ eqtl_simulator <- function(genotypes,
     # so here we are nerfing the effect size
     trans.indexes <- data.frame("geno" = rep(trans.numbers[1,i], trans.size),
                                 "pheno" = trans.pheno,
-                                "effect" = sample(coeff.sample, trans.size) * trans.nerf,
+                                "effect" = sample(cis.coeff, trans.size, replace = FALSE) * trans.nerf,
                                 "label" = "trans")
     eqtl.indexes <- rbind(eqtl.indexes, trans.indexes)
   }

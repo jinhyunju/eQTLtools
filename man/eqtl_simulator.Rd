@@ -3,9 +3,9 @@
 \alias{eqtl_simulator}
 \title{Simulating eQTL phenotypes.}
 \usage{
-eqtl_simulator(genotypes, n.pheno = 1000, n.eqtl = 800,
-  cis.trans.ratio = 0.8, trans.impact = 50, trans.nerf = 0.6,
-  coeff.sample = NULL, cis.sd = 0.5)
+eqtl_simulator(genotypes, n.pheno = NULL, n.eqtl = NULL,
+  cis.trans.ratio = NULL, trans.impact = NULL, trans.nerf = NULL,
+  coeff.sample = NULL, cis.sd = NULL)
 }
 \arguments{
 \item{genotypes}{A genotype matrix with dimensions N x g.}
@@ -16,7 +16,7 @@ eqtl_simulator(genotypes, n.pheno = 1000, n.eqtl = 800,
 
 \item{cis.trans.ratio}{Ratio between cis and trans hits}
 
-\item{trans.impact}{Maximum number of genes a trans hit can influence.}
+\item{trans.impact}{Maximum percentage of total genes a trans hit can influence.}
 
 \item{trans.nerf}{Ratio of trans effect size compared to cis-hits.
 Accounts for the observation that trans hits usually have smaller

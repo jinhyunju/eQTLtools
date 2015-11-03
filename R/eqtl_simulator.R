@@ -6,7 +6,7 @@
 #' @param n.pheno Number of phenotypes to simulate
 #' @param n.eqtl Number of eQTL pairs
 #' @param cis.trans.ratio Ratio between cis and trans hits
-#' @param trans.impact Maximum number of genes a trans hit can influence.
+#' @param trans.impact Maximum percentage of total genes a trans hit can influence.
 #' @param trans.nerf Ratio of trans effect size compared to cis-hits.
 #'        Accounts for the observation that trans hits usually have smaller
 #'        effect sizes.
@@ -19,13 +19,13 @@
 #'
 #' @export
 eqtl_simulator <- function(genotypes,
-                           n.pheno = 1000,
-                           n.eqtl = 800,
-                           cis.trans.ratio = 0.8,
-                           trans.impact = 50,
-                           trans.nerf = 0.6,
-                           coeff.sample = 2.5,
-                           cis.sd = 0.5){
+                           n.pheno = NULL,
+                           n.eqtl = NULL,
+                           cis.trans.ratio = NULL,
+                           trans.impact = NULL,
+                           trans.nerf = NULL,
+                           coeff.sample = NULL,
+                           cis.sd = NULL){
 
 #  if(is.null(coeff.sample)){
 #  }
@@ -34,6 +34,7 @@ eqtl_simulator <- function(genotypes,
   # number of genotypes
   n.geno <- ncol(genotypes)
 
+  trans.number <- round(n.pheno * trans.impact) 
   # create cis effect indicator matrix
   eqtl.effect <- matrix(0, nrow = n.geno, ncol = n.pheno)
 
@@ -68,7 +69,7 @@ eqtl_simulator <- function(genotypes,
   # will affect
   trans.numbers <- matrix(0, nrow = 2, ncol = n.trans)
   trans.numbers[1,] <- trans.geno
-  trans.numbers[2,] <- sample(1:trans.impact, n.trans, replace = TRUE)
+  trans.numbers[2,] <- sample(1:trans.number, n.trans, replace = TRUE)
 
   # loop over trans.numbers matrix to create trans relationships
   # and add it to the eqlt.indexes data frame

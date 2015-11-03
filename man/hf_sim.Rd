@@ -5,7 +5,7 @@
 \usage{
 hf_sim(n.genes, n.samples, hf.type = c("sparse", "normal", "uniform"),
   coeff.dist = c("normal", "uniform", "binom"), fraction.affected = 0.2,
-  binom.prob = 0.4)
+  binom.prob = 0.4, factor.effect.size = 2)
 }
 \arguments{
 \item{n.genes}{Number of genes in the original phenotype matrix.}

@@ -72,12 +72,13 @@ heatmap_brewer <- function(pvals, plot.title, n.cores = 2, sig.only = FALSE, fil
   plot(0, ann=FALSE, bty='n', type='n', xaxt='n', yaxt='n')
 
   if(file){
-    draw.scale(brewer.pal(10, "RdYlBu"), c(0,1), size = 3, cex = 1.5, width.to.height =10)
+#    draw.scale(brewer.pal(10, "RdYlBu"), c(0,1), size = 3, cex = 1.5, width.to.height =10)
     dev.off()
-  } else {
-    draw.scale(brewer.pal(10, "RdYlBu"), c(0,1), size = 1, cex = 1)
-    par(default.par)
-  }
+  } 
+# else {
+#    draw.scale(brewer.pal(10, "RdYlBu"), c(0,1), size = 1, cex = 1)
+#    par(default.par)
+#  }
 
 }
 

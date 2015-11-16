@@ -6,7 +6,7 @@ cleaning_results <- function(input.df, snp.info, gene.info, cis_distance){
     input.df <- merge(input.df, snp.info,
                       by.x = "genotype",by.y = "geno_id")
     input.df <- merge(input.df, gene.info,
-                      by = "phenotype")
+                      by.x = "phenotype", by.y = "pheno_id")
     input.df$hit_id <- paste(input.df$genotype,
                              input.df$phenotype, sep = "_")
     if( "p.bh" %in% colnames(input.df)){

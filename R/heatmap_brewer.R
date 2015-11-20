@@ -3,7 +3,7 @@
 #' @import RColorBrewer
 #'
 #' @export
-heatmap_brewer <- function(pvals, plot.title, n.cores = 2, sig.only = FALSE, file = TRUE){
+heatmap_brewer <- function(pvals, plot.title, n.cores = 2, sig.only = FALSE, file_create = TRUE){
   # saving graphics environment to restore later
 
   default.par <- par(no.readonly = T)
@@ -43,10 +43,9 @@ heatmap_brewer <- function(pvals, plot.title, n.cores = 2, sig.only = FALSE, fil
   pval.hits <- data.frame(which(pvals < (0.05 / length(pvals)), arr.ind=TRUE), row.names = NULL)
 
   # Approximate dimensions so that each entry in heatmap array ~ 1 pixel
-  if(file){
+  if(file_create){
     png(sprintf('%s_heatmap.png', plot.title), width=200+heatmap.snps, height=130+heatmap.probes, pointsize = 15)
   }
-
 
   par(mar=c(0, 0, 0, 0), oma=c(6, 6, 3, 1), pch='.', las=1)
   layout(matrix(c(2, 1, 4, 3), 2), heights=c(1, 8), widths=c(8, 1))
@@ -71,10 +70,10 @@ heatmap_brewer <- function(pvals, plot.title, n.cores = 2, sig.only = FALSE, fil
   plot(phenotype.pval.means, 1:ncol(pvals), type='l', yaxt='n',  yaxs='i')
   plot(0, ann=FALSE, bty='n', type='n', xaxt='n', yaxt='n')
 
-  if(file){
+  if(file_create){
 #    draw.scale(brewer.pal(10, "RdYlBu"), c(0,1), size = 3, cex = 1.5, width.to.height =10)
     dev.off()
-  } 
+  }
 # else {
 #    draw.scale(brewer.pal(10, "RdYlBu"), c(0,1), size = 1, cex = 1)
 #    par(default.par)

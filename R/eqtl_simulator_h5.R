@@ -199,7 +199,7 @@ eqtl_simulator_h5 <- function(input.geno = NULL,
 
     h5createDataset(output_h5, "sim_info/sig_map", c(ncol(sparse.effect), nrow(sparse.effect)), chunk = NULL, level = 0)
     h5createDataset(output_h5, "sim_info/ground_truth", c(nrow(ground.truth), ncol(ground.truth)), chunk = NULL, level = 0)
-    h5createDataset(output_h5, "sim_info/generative_truth", c(nrow(generative.truth), ncol(generative.truth)), chunk = NULL, level = 0)
+    h5createDataset(output_h5, "sim_info/generative_truth", c(nrow(eqtl.indexes), ncol(eqtl.indexes)), chunk = NULL, level = 0)
 
     h5write(colnames(pheno.list[["hf"]]), output_h5, "phenotypes/col_info/id")
     h5write(rownames(pheno.list[["hf"]]), output_h5, "phenotypes/row_info/id")

@@ -34,6 +34,7 @@ eqtl_simulator_h5 <- function(input.geno = NULL,
                              hf.frac = 0.2,
                              effect.size = 2){
     output_h5 <- paste(gsub("-", "_", Sys.Date()), "_",simulation.id,".h5",sep = "")
+    output_h5 <- paste(output.path, output_h5, sep = "")
     pheno.list <- list()
     n.sample <- nrow(input.geno)
 
@@ -173,7 +174,7 @@ eqtl_simulator_h5 <- function(input.geno = NULL,
 
 
     dir.create(output.path, showWarnings = FALSE)
-    setwd(output.path)
+
     # Create hdf5 file
 
     h5createFile(output_h5)

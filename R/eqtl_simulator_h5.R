@@ -167,7 +167,7 @@ eqtl_simulator_h5 <- function(input.geno = NULL,
     pheno.list[["hf"]] <- pheno.list[["noise"]] + t(hf.effect)
 
 
-    sim_details <- data.frame("N_pheno" = n.pheno, "N_eqtl" = n.eqtl, "eqtl_coeff" = coeff.mean,
+    sim_details <- c("N_pheno" = n.pheno, "N_eqtl" = n.eqtl, "eqtl_coeff" = coeff.mean,
                      "cis_trans_ratio" = cis.trans.ratio, "trans_impact" = trans.impact,
                      "trans_nerf" = trans.nerf, "N_hf" = length(factors), "HF_frac" = hf.frac,
                      "HF_effect" = effect.size)

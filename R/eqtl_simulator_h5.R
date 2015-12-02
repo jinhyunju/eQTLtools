@@ -167,7 +167,7 @@ eqtl_simulator_h5 <- function(input.geno = NULL,
     pheno.list[["hf"]] <- pheno.list[["noise"]] + t(hf.effect)
 
 
-    sim_details <- data.frame("N_pheno" = n.pheno, "N_eqtl" = n.eqtl, "eqtl_coeff" = coeff.mean,
+    simdetails <- data.frame("N_pheno" = n.pheno, "N_eqtl" = n.eqtl, "eqtl_coeff" = coeff.mean,
                      "cis_trans_ratio" = cis.trans.ratio, "trans_impact" = trans.impact,
                      "trans_nerf" = trans.nerf, "N_hf" = length(factors), "HF_frac" = hf.frac,
                      "HF_effect" = effect.size)
@@ -201,6 +201,7 @@ eqtl_simulator_h5 <- function(input.geno = NULL,
     h5createDataset(output_h5, "sim_info/sig_map", c(ncol(sparse.effect), nrow(sparse.effect)), chunk = NULL, level = 0)
     h5createDataset(output_h5, "sim_info/ground_truth", c(nrow(ground.truth), ncol(ground.truth)), chunk = NULL, level = 0)
     h5createDataset(output_h5, "sim_info/generative_truth", c(nrow(eqtl.indexes), ncol(eqtl.indexes)), chunk = NULL, level = 0)
+    h5createDataset(output_h5, "sim_info/sim_details", c(nrow(eqtl.indexes), ncol(eqtl.indexes)), chunk = NULL, level = 0)
 
     h5write(colnames(pheno.list[["hf"]]), output_h5, "phenotypes/col_info/id")
     h5write(rownames(pheno.list[["hf"]]), output_h5, "phenotypes/row_info/id")
@@ -216,8 +217,7 @@ eqtl_simulator_h5 <- function(input.geno = NULL,
     h5write(t(sparse.effect), output_h5, "sim_info/sig_map")
     h5write(ground.truth, output_h5, "sim_info/ground_truth")
     h5write(eqtl.indexes, output_h5, "sim_info/generative_truth")
-
-    h5write(sim_details, output_h5, "sim_info/sim_details")
+    h5write(simdetails, output_h5, "sim_info/sim_details")
 
 
 }

@@ -171,7 +171,8 @@ eqtl_simulator_h5 <- function(input.geno = NULL,
                      "trans_nerf" = trans.nerf, "N_hf" = length(factors), "HF_frac" = hf.frac,
                      "HF_effect" = effect.size)
 
-    dir.create(output.path)
+
+    dir.create(output.path, showWarnings = FALSE)
     setwd(output.path)
     # Create hdf5 file
 
@@ -213,7 +214,7 @@ eqtl_simulator_h5 <- function(input.geno = NULL,
 
     h5write(t(sparse.effect), output_h5, "sim_info/sig_map")
     h5write(ground.truth, output_h5, "sim_info/ground_truth")
-    h5write(generative.truth, output_h5, "sim_info/generative_truth")
+    h5write(eqtl.indexes, output_h5, "sim_info/generative_truth")
 
     h5write(sim_details, output_h5, "sim_info/details")
 

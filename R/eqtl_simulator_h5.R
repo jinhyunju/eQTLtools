@@ -22,7 +22,7 @@ eqtl_simulator_h5 <- function(input.geno = NULL,
                              n.pheno,
                              n.eqtl,
                              simulation.id,
-                             output.path = "./simpheno",
+                             output.path = NULL,
                              coeff.mean = 2.5, # now it is mean of normal distribution
                              n.sim = 5,
                              cis.trans.ratio = 0.7,

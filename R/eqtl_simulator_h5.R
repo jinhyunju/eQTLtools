@@ -190,7 +190,7 @@ eqtl_simulator_h5 <- function(input.geno = NULL,
     }
 
     h5createGroup(output_h5, "sim_info")
-
+    h5createGroup(output_h5, "ROC_df")
     # write data from simulation to hdf5 file
 
     h5createDataset(output_h5, "genotypes/matrix", c(nrow(input.geno), ncol(input.geno)), chunk = NULL, level = 0)

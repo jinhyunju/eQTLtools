@@ -32,7 +32,8 @@ eqtl_simulator_h5 <- function(input.geno = NULL,
                              factors = NULL,
                              factor.coeff = NULL,
                              hf.frac = 0.2,
-                             effect.size = 2){
+                             effect.size = 2,
+                             factor.type = NULL){
     output_h5 <- paste(simulation.id,".h5",sep = "")
     output_h5 <- paste(output.path, output_h5, sep = "")
     pheno.list <- list()
@@ -170,7 +171,7 @@ eqtl_simulator_h5 <- function(input.geno = NULL,
     simdetails <- data.frame("N_pheno" = n.pheno, "N_eqtl" = n.eqtl, "eqtl_coeff" = coeff.mean,
                      "cis_trans_ratio" = cis.trans.ratio, "trans_impact" = trans.impact,
                      "trans_nerf" = trans.nerf, "N_hf" = length(factors), "HF_frac" = hf.frac,
-                     "HF_effect" = effect.size)
+                     "HF_effect" = effect.size, "HF_type" = factor.type)
 
 
     dir.create(output.path, showWarnings = FALSE)

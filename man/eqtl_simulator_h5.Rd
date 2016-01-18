@@ -4,10 +4,10 @@
 \title{Simulating eQTL phenotypes.}
 \usage{
 eqtl_simulator_h5(input.geno = NULL, n.pheno, n.eqtl, simulation.id,
-  output.path = "./simpheno", coeff.mean = 2.5, n.sim = 5,
+  output.path = NULL, coeff.mean = 2.5, n.sim = 5,
   cis.trans.ratio = 0.7, trans.impact = 0.1, trans.nerf = 0.7,
   hidden.factor = TRUE, factors = NULL, factor.coeff = NULL,
-  hf.frac = 0.2, effect.size = 2)
+  hf.frac = 0.2, effect.size = 2, factor.type = NULL)
 }
 \arguments{
 \item{n.pheno}{Number of phenotypes to simulate}

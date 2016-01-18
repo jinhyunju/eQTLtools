@@ -177,18 +177,18 @@ eqtl_simulator_h5 <- function(input.geno = NULL,
     dir.create(output.path, showWarnings = FALSE)
 
     # Create hdf5 file
-
-    h5createFile(output_h5)
+	create_eqtl_input_h5(output_h5)
+#    h5createFile(output_h5)
 
 
     # creating structure of hdf5 file
-    level1.groups <- c("phenotypes", "genotypes", "covars")
+#    level1.groups <- c("phenotypes", "genotypes", "covars")
 
-    for(l1 in 1:length(level1.groups)){
-        h5createGroup(output_h5, level1.groups[l1])
-        h5createGroup(output_h5, paste(level1.groups[l1], "col_info", sep = "/"))
-        h5createGroup(output_h5, paste(level1.groups[l1], "row_info", sep = "/"))
-    }
+#    for(l1 in 1:length(level1.groups)){
+#        h5createGroup(output_h5, level1.groups[l1])
+#        h5createGroup(output_h5, paste(level1.groups[l1], "col_info", sep = "/"))
+#        h5createGroup(output_h5, paste(level1.groups[l1], "row_info", sep = "/"))
+#    }
 
     h5createGroup(output_h5, "sim_info")
     h5createGroup(output_h5, "ROC_df")

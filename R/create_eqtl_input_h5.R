@@ -19,6 +19,8 @@ create_eqtl_input_h5 <- function(file_name){
         h5createGroup(file_name, paste(level1.groups[l1], "col_info", sep = "/"))
         h5createGroup(file_name, paste(level1.groups[l1], "row_info", sep = "/"))
     }
+	
+	h5createGroup(file_name, "K_mx")
 	H5close()
 }
 

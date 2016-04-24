@@ -32,10 +32,10 @@ cleaning_results <- function(input.df, snp.info, gene.info, cis_distance){
                                function(x) cis_labeling(x, cis_distance))
 
     result.df$cis_trans <- cis_trans_result
-    result.df$geno_chr <- factor(result.df$geno_chr,
-                                 levels = mixedsort(unique(result.df$geno_chr)))
-    result.df$pheno_chr <- factor(result.df$pheno_chr,
-                                  levels = mixedsort(unique(result.df$pheno_chr)))
+#    result.df$geno_chr <- factor(result.df$geno_chr,
+#                                levels = mixedsort(unique(result.df$geno_chr)))
+#    result.df$pheno_chr <- factor(result.df$pheno_chr,
+#                                  levels = mixedsort(unique(result.df$pheno_chr)))
 
     return(result.df)
 }

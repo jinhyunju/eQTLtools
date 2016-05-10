@@ -19,52 +19,44 @@
 #' @import rhdf5
 #' @export
 eqtl_simulator_cistrans_h5 <- function(input_h5 = NULL,
-                             n.pheno,
-                             n.eqtl,
-                             simulation.id,
-                             output.path = NULL,
-                             coeff.mean = 2.5, # now it is mean of normal distribution
-                             n.sim = 5,
-                             cis.trans.ratio = 0.7,
-                             trans.impact = 0.1,
-                             trans.nerf = 0.7,
-                             hidden.factor = TRUE,
-                             factors = NULL,
-                             factor.coeff = NULL,
-                             hf.frac = 0.2,
-                             effect.size = 2,
-                             factor.type = NULL){
+                                       n_pheno = 2000,
+                                       n_eqtl = 1500,
+                                       cis_trans_ratio = 0.7,
+                                       simulation.id = "sim1",
+                                       output.path = "./",
+                                       coeff_mean = 2.5, # now it is mean of normal distribution
+                                       trans_nerf = 0.7,
+                                       hidden.factor = TRUE,
+                                       factors = "sparse",
+                                       factor_coeff = 2.1,
+                                       hf_frac = 0.2,
+                                       effect_size = 2,
+                                       factor_type = "sparse"){
+
+
     output_h5 <- paste(simulation.id,".h5",sep = "")
     output_h5 <- paste(output.path, output_h5, sep = "")
+
     pheno.list <- list()
 
     geno_mx <- h5read(input_h5, "genotypes/matrix")
+    sample_ids <- h5read(input_h5, "genotypes/row_info/id")
+    geno_ids <- h5read(input_h5, "genotypes/col_info/id")
 
-    geno_chr <- h5read(input_h5, "genotypes/col_info/geno_chr")
-    geno_pos <- h5read(input_h5, "genotypes/col_info/geno_pos")
-    geno_id <- h5read(input_h5, "genotypes/col_info/id")
+    geno_info <- as.data.frame(h5read(input_h5, "genotypes/col_info"), stringsAsFactors = FALSE)
 
-    pheno_chr <- h5read(input_h5, "phenotypes/col_info/pheno_chr")
-    pheno_start <- h5read(input_h5, "phenotypes/col_info/pheno_start")
-    pheno_end <- h5read(input_h5, "phenotypes/col_info/pheno_end")
-    pheno_id <- h5read(input_h5, "phenotypes/col_info/id")
-    
-    geno_df <- data.frame("geno_chr" = geno_chr, 
-                           "geno_pos" = geno_pos, 
-                           "geno_id" = geno_id)
+    pheno_info <- as.data.frame(h5read(input_h5, "phenotypes/col_info"), stringsAsFactors = FALSE)
 
-    pheno_df <- data.frame("pheno_chr" = pheno_chr, 
-                           "pheno_start" = pheno_start,
-                           "pheno_end" = pheno_end,
-                           "pheno_id" = pheno_id)
+    # generating a matrix of cis and trans positions based on the geno and pheno info
+    cis_trans_mx = create_cis_trans_mx(geno_info = geno_info, pheno_info = pheno_info, cis_threshold = 100000)
 
-    n.sample <- nrow(geno_mx)
+    # sample from phenotypes a subset
+    subset_pheno <- sort(sample(1:ncol(cis_trans_mx), n_pheno, replace = FALSE), decreasing = FALSE)
 
-    sim.geneinfo <- pheno_position_simulator(n.pheno, 15)
+    subset_pheno_info <- pheno_info[subset_pheno,]
+    # subset the cis trans matrix
+    subset_cis_trans <- cis_trans_mx[,subset_pheno]
 
-    # Genotype LD estimation (using simple correlation)
-    geno.cor.mx <- cor(input.geno)
-    sparse.cor.mx <- 1*(abs(geno.cor.mx) > 0.8)
 
     dir.create(output.path, showWarnings = FALSE)
 
@@ -73,96 +65,62 @@ eqtl_simulator_cistrans_h5 <- function(input_h5 = NULL,
     ################################################################################
     #pheno.list <- list()
 
+    cis_count <- round(n_eqtl * cis_trans_ratio)
 
-    n.geno <- ncol(input.geno)
+    trans_count <- n_eqtl - cis_count
 
-    trans.number <- round(n.pheno * trans.impact)
-    # create cis effect indicator matrix
-    eqtl.effect <- matrix(0, nrow = n.geno, ncol = n.pheno)
+    n_geno <- ncol(geno_mx)
+    n_sample <- nrow(geno_mx)
 
+    cis_indexes <- which(subset_cis_trans, arr.ind = TRUE)
+    trans_indexes <- which(!subset_cis_trans, arr.ind = TRUE)
 
+    sample_cis <- sort(sample(1:nrow(cis_indexes), cis_count, replace = FALSE), decreasing = FALSE)
+    sample_trans <- sort(sample(1:nrow(trans_indexes), trans_count, replace = FALSE), decreasing = FALSE)
+
+    sampled_cis_idx <- cis_indexes[sample_cis,]
+    sampled_trans_idx <- trans_indexes[sample_trans,]
     # creat genotype phenotype pairs for eqtl
-    # sampling genotypes for eqtls based on the desired numbers of eqtl
-    eqtl.geno <- sample(1:n.geno, n.eqtl)
 
-    # number of cis relationships determined by the cis.trans.ratio
-    n.cis <- round(n.eqtl * cis.trans.ratio)
 
     # sample effect of cis eQTL
-    cis.coeff <- sample(c(-1,1),1) * rnorm(n.cis, mean = coeff.mean, sd = 1)
+    cis_coeff <- sample(c(-1,1),1) * rnorm(cis_count, mean = coeff_mean, sd = 1)
+    trans_coeff <- sample(c(-1,1),1) * rnorm(trans_count, mean = coeff_mean * trans_nerf, sd = 1)
 
-    # The rest of the genotypes will be trans-eqtls
-    n.trans <- n.eqtl - n.cis
+    cis_eqtl_info <- data.frame("geno" = sampled_cis_idx[,1], "pheno" = sampled_cis_idx[,2],
+                                "effect" = cis_coeff, "label" = rep("cis", nrow(sampled_cis_idx)))
 
-    # from eqtl genotypes sample cis candidates
-    cis.geno <- sample(eqtl.geno, n.cis, replace = FALSE)
-
-    # the rest will be used for trans candidates
-    trans.geno <- eqtl.geno[!(eqtl.geno %in% cis.geno)]
+    trans_eqtl_info <- data.frame("geno" = sampled_trans_idx[,1], "pheno" = sampled_trans_idx[,2],
+                                  "effect" = trans_coeff, "label" = rep("trans", nrow(sampled_trans_idx)))
 
     # create ground truth dataframe which has all the genotype / phenotype
     # relationships and effectsize saved
-    eqtl.indexes <- data.frame("geno" = sort(cis.geno),
-                             "pheno" = sort(sample(1:n.pheno, n.cis, replace = FALSE)),
-                             "effect" = cis.coeff,
-                             "label" = "cis")
 
-    # create a matrix that will decide how many genes a single trans genotype
-    # will affect
-    trans.mx <- matrix(0, nrow = 2, ncol = n.trans)
-    trans.mx[1,] <- trans.geno
-    trans.mx[2,] <- sample(1:trans.number, n.trans, replace = TRUE)
+    eqtl_indexes <- rbind(cis_eqtl_info, trans_eqtl_info)
+
+    # create eQTL effect matrix
+    eqtl_effect <- matrix(0, nrow = n_geno, ncol = n_pheno)
 
     # loop over trans.mx matrix to create trans relationships
     # and add it to the eqlt.indexes data frame
 
-    for(i in 1:ncol(trans.mx)){
-        trans.size <- trans.mx[2,i]
-        trans.pheno <- sample(1:n.pheno, trans.size, replace = FALSE)
-        # common perception is that trans eqtls have smaller effet sizes
-        # so here we are nerfing the effect size
-        trans.indexes <- data.frame("geno" = rep(trans.mx[1,i], trans.size),
-                                    "pheno" = trans.pheno,
-                                    "effect" = sample(cis.coeff, trans.size, replace = FALSE) * trans.nerf,
-                                    "label" = "trans")
-        eqtl.indexes <- rbind(eqtl.indexes, trans.indexes)
+    for(i in 1:nrow(eqtl_indexes)){
+        eqtl_effect[eqtl_indexes[i,"geno"], eqtl_indexes[i,"pheno"]] <- eqtl_indexes[i,"effect"]
     }
 
-    for(i in 1:nrow(eqtl.indexes)){
-        eqtl.effect[eqtl.indexes[i,"geno"], eqtl.indexes[i,"pheno"]] <- eqtl.indexes[i,"effect"]
-    }
+    pheno_list <- list()
+    pheno_list[["noisefree"]] <- geno_mx %*% eqtl_effect
 
-    pheno.list[["noisefree"]] <- input.geno %*% eqtl.effect
 
-    # key results = phenotype.mx, eqtl.indexes, eqtl.effect
-
-    sparse.effect <- 1*(eqtl.effect != 0)
-
-    # generating ground truth that accounts for LD structure (based on correlation)
-    # loop over phenotype
-    for( p in 1: ncol(sparse.effect)){
-      # identify genotypes which are contributing
-      geno.pos <- which(sparse.effect[,p] == 1)
-      for (single.geno in geno.pos){
-        ld.block <- which(sparse.cor.mx[single.geno,] == 1)
-        sparse.effect[ld.block, p] <- 1
-      }
-    }
-
-    ground.truth <- data.frame(which(sparse.effect == 1, arr.ind = TRUE))
-    ground.truth$pair <- paste(ground.truth[,1], ground.truth[,2], sep = "_")
-
-    #eqtl.indexes = generative.truth
-
-    colnames(pheno.list[["noisefree"]]) <- sim.geneinfo$phenotype
-
+    colnames(pheno_list[["noisefree"]]) <- as.character(subset_pheno_info$id)
+    rownames(pheno_list[["noisefree"]]) <- sample_ids
 
     ################################################################################
     #################              Add Gaussian Noise              #################
     ################################################################################
 
-    pheno.list[["noise"]] <- pheno.list[["noisefree"]] +
-                                        rnorm(length(pheno.list[["noisefree"]]),
+    pheno_list[["noise"]] <- pheno_list[["noisefree"]] +
+                                        rnorm(length(pheno_list[["noisefree"]]),
                                               mean = 0,
                                               sd = 0.5)
 
@@ -171,34 +129,33 @@ eqtl_simulator_cistrans_h5 <- function(input_h5 = NULL,
     #################              Add Hidden factors              #################
     ################################################################################
 
-    factor.details <- matrix(cbind(factors,factor.coeff),
-                           ncol = 2,
-                           byrow = FALSE)
+    factor_details <- matrix(cbind(factors,factor_coeff),
+                                   ncol = 2,
+                                   byrow = FALSE)
 
-    hf_list <- apply(factor.details, 1, function(x) hf_sim(n.genes = n.pheno,
-                                                         n.samples = n.sample,
+    hf_list <- apply(factor_details, 1, function(x) hf_sim(n.genes = n_pheno,
+                                                         n.samples = n_sample,
                                                          hf.type = x[1],
                                                          coeff.dist = x[2],
-                                                         fraction.affected = hf.frac,
-                                                         factor.effect.size = effect.size))
+                                                         fraction.affected = hf_frac,
+                                                         factor.effect.size = effect_size))
 
     # add all hidden factor effects
-    hf.effect <- Reduce(`+`, lapply(hf_list, function(x) x$effect))
+    hf_effect <- Reduce(`+`, lapply(hf_list, function(x) x$effect))
+
+    pheno_list[["hf"]] <- pheno_list[["noise"]] + t(hf_effect)
 
 
-    pheno.list[["hf"]] <- pheno.list[["noise"]] + t(hf.effect)
-
-
-    simdetails <- data.frame("N_pheno" = n.pheno, "N_eqtl" = n.eqtl, "eqtl_coeff" = coeff.mean,
-                     "cis_trans_ratio" = cis.trans.ratio, "trans_impact" = trans.impact,
-                     "trans_nerf" = trans.nerf, "N_hf" = length(factors), "HF_frac" = hf.frac,
-                     "HF_effect" = effect.size, "HF_type" = factor.type)
+    simdetails <- data.frame("N_pheno" = n_pheno, "N_eqtl" = n_eqtl, "eqtl_coeff" = coeff_mean,
+                     "cis_trans_ratio" = cis_trans_ratio,
+                     "trans_nerf" = trans_nerf, "N_hf" = length(factors), "HF_frac" = hf_frac,
+                     "HF_effect" = effect_size, "HF_type" = factor_type)
 
 
     dir.create(output.path, showWarnings = FALSE)
 
     # Create hdf5 file
-	create_eqtl_input_h5(output_h5)
+	  create_eqtl_input_h5(output_h5)
 #    h5createFile(output_h5)
 
 
@@ -215,29 +172,56 @@ eqtl_simulator_cistrans_h5 <- function(input_h5 = NULL,
     h5createGroup(output_h5, "ROC_df")
     # write data from simulation to hdf5 file
 
-    h5createDataset(output_h5, "genotypes/matrix", c(nrow(input.geno), ncol(input.geno)), chunk = NULL, level = 0)
-    h5createDataset(output_h5, "phenotypes/matrix", c(nrow(pheno.list[["hf"]]), ncol(pheno.list[["hf"]])), chunk = NULL, level = 0)
-    h5createDataset(output_h5, "phenotypes/noisefree", c(nrow(pheno.list[["hf"]]), ncol(pheno.list[["hf"]])), chunk = NULL, level = 0)
-    h5createDataset(output_h5, "phenotypes/noise", c(nrow(pheno.list[["hf"]]), ncol(pheno.list[["hf"]])), chunk = NULL, level = 0)
+    h5createDataset(output_h5, "genotypes/matrix", c(n_sample, n_geno), chunk = NULL, level = 0)
+    h5createDataset(output_h5, "phenotypes/matrix", c(n_sample, n_pheno), chunk = NULL, level = 0)
+    h5createDataset(output_h5, "phenotypes/noisefree", c(n_sample, n_pheno), chunk = NULL, level = 0)
+    h5createDataset(output_h5, "phenotypes/noise", c(n_sample, n_pheno), chunk = NULL, level = 0)
 
-    h5createDataset(output_h5, "sim_info/sig_map", c(ncol(sparse.effect), nrow(sparse.effect)), chunk = NULL, level = 0)
+#    h5createDataset(output_h5, "sim_info/sig_map", c(ncol(sparse.effect), nrow(sparse.effect)), chunk = NULL, level = 0)
 
-    h5write(colnames(pheno.list[["hf"]]), output_h5, "phenotypes/col_info/id")
-    h5write(rownames(pheno.list[["hf"]]), output_h5, "phenotypes/row_info/id")
-    h5write(colnames(input.geno), output_h5, "genotypes/col_info/id")
-    h5write(rownames(input.geno), output_h5, "genotypes/row_info/id")
+    h5write(colnames(pheno_list[["hf"]]), output_h5, "phenotypes/col_info/id")
+    h5write(rownames(pheno_list[["hf"]]), output_h5, "phenotypes/row_info/id")
+    h5write(geno_ids, output_h5, "genotypes/col_info/id")
+    h5write(sample_ids, output_h5, "genotypes/row_info/id")
 
-    h5write(pheno.list[["hf"]], output_h5, "phenotypes/matrix")
-    h5write(pheno.list[["noisefree"]], output_h5, "phenotypes/noisefree")
-    h5write(pheno.list[["noise"]], output_h5, "phenotypes/noise")
+    h5write(pheno_list[["hf"]], output_h5, "phenotypes/matrix")
+    h5write(pheno_list[["noisefree"]], output_h5, "phenotypes/noisefree")
+    h5write(pheno_list[["noise"]], output_h5, "phenotypes/noise")
 
-    h5write(input.geno, output_h5, "genotypes/matrix")
+    h5write(geno_mx, output_h5, "genotypes/matrix")
 
-    h5write(t(sparse.effect), output_h5, "sim_info/sig_map")
-    h5write(ground.truth, output_h5, "sim_info/ground_truth")
-    h5write(eqtl.indexes, output_h5, "sim_info/generative_truth")
+    #h5write(t(sparse.effect), output_h5, "sim_info/sig_map")
+    h5write(eqtl_indexes, output_h5, "sim_info/ground_truth")
+
+    #h5write(eqtl.indexes, output_h5, "sim_info/generative_truth")
     h5write(simdetails, output_h5, "sim_info/sim_details")
 
 
 }
 
+
+
+#' @export
+
+create_cis_trans_mx <- function(geno_info = NULL, pheno_info = NULL, cis_threshold = 1000000){
+  cis_threshold <- 100000
+  cis_trans_mx <- matrix(NA, nrow = nrow(geno_info), ncol = nrow(pheno_info))
+
+  for(i in 1:nrow(geno_info)){
+
+    same_chr <- as.character(geno_info[i,"geno_chr"]) == as.character(pheno_info[,"pheno_chr"])
+
+    distance <- cbind(abs(pheno_info[,"pheno_start"] - geno_info[i,"geno_pos"]), abs(pheno_info[,"pheno_end"] - geno_info[i,"geno_pos"]))
+
+    min_distance <- apply(distance, 1, min)
+
+    cis_distance <- min_distance <= cis_threshold
+
+    cis_trans <- same_chr & cis_distance
+
+    cis_trans_mx[i,] <- cis_trans
+
+  }
+
+  return(cis_trans_mx)
+}

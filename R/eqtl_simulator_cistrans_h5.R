@@ -191,8 +191,11 @@ eqtl_simulator_cistrans_h5 <- function(input_h5 = NULL,
     h5write(geno_mx, output_h5, "genotypes/matrix")
 
     #h5write(t(sparse.effect), output_h5, "sim_info/sig_map")
-    h5write(eqtl_indexes, output_h5, "sim_info/ground_truth")
-
+    h5createGroup(output_h5, "sim_info/ground_truth")
+    h5write(as.numeric(eqtl_indexes$geno), output_h5, "sim_info/ground_truth/geno")
+    h5write(as.numeric(eqtl_indexes$pheno), output_h5, "sim_info/ground_truth/pheno")
+    h5write(as.numeric(eqtl_indexes$effect), output_h5, "sim_info/ground_truth/effect")
+    h5write(as.character(eqtl_indexes$label), output_h5, "sim_info/ground_truth/cis_trans")
     #h5write(eqtl.indexes, output_h5, "sim_info/generative_truth")
     h5write(simdetails, output_h5, "sim_info/sim_details")
 

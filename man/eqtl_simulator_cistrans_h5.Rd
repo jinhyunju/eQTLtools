@@ -5,9 +5,10 @@
 \usage{
 eqtl_simulator_cistrans_h5(input_h5 = NULL, n_pheno = 2000, n_eqtl = 1500,
   cis_trans_ratio = 0.7, simulation.id = "sim1", output.path = "./",
-  coeff_mean = 2.5, trans_nerf = 0.7, hidden.factor = TRUE,
-  factors = "sparse", factor_coeff = 2.1, hf_frac = 0.2,
-  effect_size = 2, factor_type = "sparse")
+  coeff_mean = 2.5, trans_nerf = 0.7, hot_spots = 8,
+  hot_spot_impact = 0.1, hidden.factor = TRUE, factors = "sparse",
+  factor_coeff = 2.1, hf_frac = 0.2, effect_size = 2,
+  factor_type = "sparse")
 }
 \arguments{
 \item{genotypes}{A genotype matrix with dimensions N x g.}

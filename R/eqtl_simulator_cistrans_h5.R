@@ -26,6 +26,8 @@ eqtl_simulator_cistrans_h5 <- function(input_h5 = NULL,
                                        output.path = "./",
                                        coeff_mean = 2.5, # now it is mean of normal distribution
                                        trans_nerf = 0.7,
+                                       hot_spots = 8,
+                                       hot_spot_impact = 0.1,
                                        hidden.factor = TRUE,
                                        factors = "sparse",
                                        factor_coeff = 2.1,
@@ -57,7 +59,7 @@ eqtl_simulator_cistrans_h5 <- function(input_h5 = NULL,
     # subset the cis trans matrix
     subset_cis_trans <- cis_trans_mx[,subset_pheno]
 
-
+    geno_hot_spots <- sample(1:nrow(cis_trans_mx),hot_spots)
     dir.create(output.path, showWarnings = FALSE)
 
     ################################################################################
@@ -82,7 +84,6 @@ eqtl_simulator_cistrans_h5 <- function(input_h5 = NULL,
     sampled_trans_idx <- trans_indexes[sample_trans,]
     # creat genotype phenotype pairs for eqtl
 
-
     # sample effect of cis eQTL
     cis_coeff <- sample(c(-1,1),1) * rnorm(cis_count, mean = coeff_mean, sd = 1)
     trans_coeff <- sample(c(-1,1),1) * rnorm(trans_count, mean = coeff_mean * trans_nerf, sd = 1)
@@ -97,6 +98,19 @@ eqtl_simulator_cistrans_h5 <- function(input_h5 = NULL,
     # relationships and effectsize saved
 
     eqtl_indexes <- rbind(cis_eqtl_info, trans_eqtl_info)
+
+    hot_spot_impact_max <- round(n_geno * hot_spot_impact)
+
+    hot_spot_geno <- sort(sample(1:n_geno, hot_spots), decreasing = FALSE)
+    for(h in hot_spot_geno){
+      hot_subset <- trans_indexes[which(trans_indexes[,1] == h),]
+      impact_pheno <- min(hot_spot_impact_max, nrow(hot_subset))
+      hot_index <- hot_subset[sample(1:nrow(hot_subset), impact_pheno),]
+      hot_coeff <- sample(c(-1,1),1) * rnorm(nrow(hot_index), mean = coeff_mean * trans_nerf, sd = 1)
+      temp_df <- data.frame("geno" = hot_index[,1], "pheno" = hot_index[,2],
+                            "effect" = hot_coeff, "label" = rep("trans_hot", nrow(hot_index)))
+      eqtl_indexes <- rbind(eqtl_indexes, temp_df)
+    }
 
     # create eQTL effect matrix
     eqtl_effect <- matrix(0, nrow = n_geno, ncol = n_pheno)
@@ -198,7 +212,6 @@ eqtl_simulator_cistrans_h5 <- function(input_h5 = NULL,
     h5write(as.character(eqtl_indexes$label), output_h5, "sim_info/ground_truth/cis_trans")
     #h5write(eqtl.indexes, output_h5, "sim_info/generative_truth")
     h5write(simdetails, output_h5, "sim_info/sim_details")
-
 
 }
 

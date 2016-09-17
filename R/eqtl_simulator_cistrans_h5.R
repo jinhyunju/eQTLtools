@@ -20,6 +20,7 @@
 #' @export
 eqtl_simulator_cistrans_h5 <- function(input_h5 = NULL,
                                        n_pheno = 2000,
+                                       n_geno = NULL,
                                        n_eqtl = 1500,
                                        cis_trans_ratio = 0.7,
                                        simulation.id = "sim1",
@@ -41,25 +42,35 @@ eqtl_simulator_cistrans_h5 <- function(input_h5 = NULL,
 
     pheno.list <- list()
 
+
     geno_mx <- h5read(input_h5, "genotypes/matrix")
     sample_ids <- h5read(input_h5, "genotypes/row_info/id")
-    geno_ids <- h5read(input_h5, "genotypes/col_info/id")
+    n_sample <- nrow(geno_mx)
 
+    if(is.null(n_geno)){
+        n_geno <- ncol(geno_mx)
+    } else if (!is.null(n_geno)){
+        geno_subset <- sort(sample(1:ncol(geno_mx), n_geno,replace = FALSE), decreasing = FALSE)
+        geno_mx <- geno_mx[,geno_subset]
+    }
     geno_info <- as.data.frame(h5read(input_h5, "genotypes/col_info"), stringsAsFactors = FALSE)
 
     pheno_info <- as.data.frame(h5read(input_h5, "phenotypes/col_info"), stringsAsFactors = FALSE)
 
+    subset_geno_info <- geno_info[geno_subset,]
+    subset_pheno_info <- pheno_info[sort(sample(1:nrow(pheno_info), n_pheno,replace = FALSE), decreasing = FALSE),]
+    geno_ids <- subset_geno_info$id
     # generating a matrix of cis and trans positions based on the geno and pheno info
-    cis_trans_mx = create_cis_trans_mx(geno_info = geno_info, pheno_info = pheno_info, cis_threshold = 100000)
+    subset_cis_trans = create_cis_trans_mx(geno_info = subset_geno_info, pheno_info = subset_pheno_info, cis_threshold = 100000)
 
     # sample from phenotypes a subset
-    subset_pheno <- sort(sample(1:ncol(cis_trans_mx), n_pheno, replace = FALSE), decreasing = FALSE)
+#    subset_pheno <- sort(sample(1:ncol(cis_trans_mx), n_pheno, replace = FALSE), decreasing = FALSE)
 
-    subset_pheno_info <- pheno_info[subset_pheno,]
+#    subset_pheno_info <- pheno_info[subset_pheno,]
     # subset the cis trans matrix
-    subset_cis_trans <- cis_trans_mx[,subset_pheno]
+#    subset_cis_trans <- cis_trans_mx[,subset_pheno]
 
-    geno_hot_spots <- sample(1:nrow(cis_trans_mx),hot_spots)
+    geno_hot_spots <- sample(1:nrow(subset_cis_trans),hot_spots)
     dir.create(output.path, showWarnings = FALSE)
 
     ################################################################################
@@ -70,9 +81,6 @@ eqtl_simulator_cistrans_h5 <- function(input_h5 = NULL,
     cis_count <- round(n_eqtl * cis_trans_ratio)
 
     trans_count <- n_eqtl - cis_count
-
-    n_geno <- ncol(geno_mx)
-    n_sample <- nrow(geno_mx)
 
     cis_indexes <- which(subset_cis_trans, arr.ind = TRUE)
     trans_indexes <- which(!subset_cis_trans, arr.ind = TRUE)
@@ -195,6 +203,12 @@ eqtl_simulator_cistrans_h5 <- function(input_h5 = NULL,
 
     h5write(colnames(pheno_list[["hf"]]), output_h5, "phenotypes/col_info/id")
     h5write(rownames(pheno_list[["hf"]]), output_h5, "phenotypes/row_info/id")
+    h5write(as.character(subset_pheno_info$pheno_chr), output_h5, "phenotypes/col_info/pheno_chr")
+    h5write(as.double(subset_pheno_info$pheno_start), output_h5, "phenotypes/col_info/pheno_start")
+    h5write(as.double(subset_pheno_info$pheno_end), output_h5, "phenotypes/col_info/pheno_end")
+    h5write(as.character(subset_geno_info$geno_chr), output_h5, "genotypes/col_info/geno_chr")
+    h5write(as.double(subset_geno_info$geno_pos), output_h5, "genotypes/col_info/geno_pos")
+
     h5write(geno_ids, output_h5, "genotypes/col_info/id")
     h5write(sample_ids, output_h5, "genotypes/row_info/id")
 

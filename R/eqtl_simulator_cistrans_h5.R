@@ -34,7 +34,8 @@ eqtl_simulator_cistrans_h5 <- function(input_h5 = NULL,
                                        factor_coeff = 2.1,
                                        hf_frac = 0.2,
                                        effect_size = 2,
-                                       factor_type = "sparse"){
+                                       factor_type = "sparse",
+                                       noise_sd = 1){
 
 
     output_h5 <- paste(simulation.id,".h5",sep = "")
@@ -47,17 +48,21 @@ eqtl_simulator_cistrans_h5 <- function(input_h5 = NULL,
     sample_ids <- h5read(input_h5, "genotypes/row_info/id")
     n_sample <- nrow(geno_mx)
 
-    if(is.null(n_geno)){
-        n_geno <- ncol(geno_mx)
-    } else if (!is.null(n_geno)){
-        geno_subset <- sort(sample(1:ncol(geno_mx), n_geno,replace = FALSE), decreasing = FALSE)
-        geno_mx <- geno_mx[,geno_subset]
-    }
+
     geno_info <- as.data.frame(h5read(input_h5, "genotypes/col_info"), stringsAsFactors = FALSE)
 
     pheno_info <- as.data.frame(h5read(input_h5, "phenotypes/col_info"), stringsAsFactors = FALSE)
 
-    subset_geno_info <- geno_info[geno_subset,]
+    if(is.null(n_geno)){
+        n_geno <- ncol(geno_mx)
+        subset_geno_info <- geno_info
+    } else if (!is.null(n_geno)){
+        geno_subset <- sort(sample(1:ncol(geno_mx), n_geno,replace = FALSE), decreasing = FALSE)
+        geno_mx <- geno_mx[,geno_subset]
+        subset_geno_info <- geno_info[geno_subset,]
+    }
+
+
     subset_pheno_info <- pheno_info[sort(sample(1:nrow(pheno_info), n_pheno,replace = FALSE), decreasing = FALSE),]
     geno_ids <- subset_geno_info$id
     # generating a matrix of cis and trans positions based on the geno and pheno info
@@ -144,7 +149,7 @@ eqtl_simulator_cistrans_h5 <- function(input_h5 = NULL,
     pheno_list[["noise"]] <- pheno_list[["noisefree"]] +
                                         rnorm(length(pheno_list[["noisefree"]]),
                                               mean = 0,
-                                              sd = 0.5)
+                                              sd = noise_sd)
 
 
     ################################################################################

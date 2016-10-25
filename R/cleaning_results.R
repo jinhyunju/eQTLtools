@@ -17,7 +17,7 @@ cleaning_results <- function(input.df, snp.info, gene.info, cis_distance){
     result.df <- result.df[order(result.df$pval),]
 
     same_chr <- result.df$geno_chr == result.df$pheno_chr
-    distance <- with(result.df,min(abs(pheno_start - geno_pos), abs(pheno_end - geno_pos)))
+    distance <- with(result.df, abs(pheno_start - geno_pos))
     cis_distance <- distance <= cis_distance
     cis_hit <- same_chr & cis_distance
 
